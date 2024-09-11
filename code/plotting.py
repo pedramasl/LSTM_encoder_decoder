@@ -64,7 +64,7 @@ def plot_train_test_results(lstm_model, Xtrain, Ytrain, Xtest, Ytest, num_rows =
   plt.suptitle('LSTM Encoder-Decoder Predictions', x = 0.445, y = 1.)
   plt.tight_layout()
   plt.subplots_adjust(top = 0.95)
-  plt.savefig('plots/predictions.png')
+  plt.savefig('code/plots/predictions.png')
   plt.close() 
       
   return 

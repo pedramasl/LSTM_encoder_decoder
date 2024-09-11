@@ -30,7 +30,7 @@ plt.xlim([t[0], t[-1]])
 plt.xlabel('$t$')
 plt.ylabel('$y$')
 plt.title('Synthetic Time Series')
-plt.savefig('plots/synthetic_time_series.png')
+plt.savefig('code/plots/synthetic_time_series.png')
 
 # plot time series with train/test split
 plt.figure(figsize = (18, 6))
@@ -43,7 +43,7 @@ plt.ylabel(r'$y$')
 plt.title('Time Series Split into Train and Test Sets')
 plt.legend(bbox_to_anchor=(1, 1))
 plt.tight_layout
-plt.savefig('plots/train_test_split.png')
+plt.savefig('code/plots/train_test_split.png')
 
 #----------------------------------------------------------------------------------------------------------------
 # window dataset
@@ -68,7 +68,7 @@ plt.ylabel(r'$y$')
 plt.title('Example of Windowed Training Data')
 plt.legend(bbox_to_anchor=(1.3, 1))
 plt.tight_layout() 
-plt.savefig('plots/windowed_data.png')
+plt.savefig('code/plots/windowed_data.png')
 
 #----------------------------------------------------------------------------------------------------------------
 # LSTM encoder-decoder

@@ -5,12 +5,10 @@ import random
 import os, errno
 import sys
 from tqdm import trange
-
 import torch
 import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
-
 
 class lstm_encoder(nn.Module):
     ''' Encodes time-series sequence '''
@@ -56,7 +54,6 @@ class lstm_encoder(nn.Module):
         
         return (torch.zeros(self.num_layers, batch_size, self.hidden_size),
                 torch.zeros(self.num_layers, batch_size, self.hidden_size))
-
 
 class lstm_decoder(nn.Module):
     ''' Decodes hidden state output by encoder '''
