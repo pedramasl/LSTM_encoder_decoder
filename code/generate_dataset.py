@@ -1,26 +1,160 @@
-# Author: Laura Kulowski
 
-'''
-
-Generate a synthetic dataset for our LSTM encoder-decoder
-We will consider a noisy sinusoidal curve 
-
-'''
-
-import numpy as np
 import torch
+import pandas as pd
+import numpy as np
+from tkinter import Tk
+import glob
+import os
+import warnings
+from supersmoother import SuperSmoother
+
+warnings.simplefilter("ignore")
+shell = 'SS'
+ID = 40
+plateuTemp = 78 # top plateu temp of shell cure cycle
+window_size = 20 # window size for moving average
+startTemp = 40 # ramp up temp
+endTemp = 50 # ramp down temp
+maxRange = 2000 # max range of cure cycle
+bigLeap = 300 # skip to get out of current cycle toward next cycle
+maxTemp = 200
+discardThresh = 100
 
 def synthetic_data(Nt = 2000, tf = 80 * np.pi):
-    
-    '''
-    create synthetic time series dataset
-    : param Nt:       number of time steps 
-    : param tf:       final time
-    : return t, y:    time, feature arrays
-    '''
-    
+
+    folder_path =  "c:/Users/admin/Desktop/old/cure-thingy/WT20-PS/MM4"
+    csv_files = glob.glob(folder_path + '/*'+shell+'*.csv')
+    os.makedirs(folder_path + '/results', exist_ok=True)
+    # for ID in range(1, 129):
+    PV = 'PV' + str(ID)
+    WSP = 'WSP' + str(ID)
+    TSP = 'TSP' + str(ID) 
+
+    pvCycles = [] 
+    dates = []
+    tgs = []
+    tspCycles = []
+    wspCycles = [] 
+    pvMax = []
+
+    for file_path in csv_files:
+            try:
+                date = file_path.split('/')[-1].split('_')[3].split(' ')[0]
+                dates.append(date)
+                df = pd.read_csv(file_path,delimiter=';')
+                lastPV = df.columns[df.columns.str.startswith('PV')][-1].split('PV')[1]
+                if ID > int(lastPV):  
+                    continue
+                df[PV] = df[PV][df[PV].astype(str).str.strip() != '']
+                df[PV] = df[PV][df[PV].astype(float) != 0]
+                df[PV] = df[PV][df[PV].astype(float) < maxTemp]
+                df[TSP] = df[TSP][df[TSP].astype(str).str.strip() != '']
+                df[TSP] = df[TSP][df[TSP].astype(float) < maxTemp]
+                df[WSP] = df[WSP][df[WSP].astype(str).str.strip() != '']
+                df[WSP] = df[WSP][df[WSP].astype(float) < maxTemp]
+                temp = df[PV].dropna()
+                PVdata = temp.reset_index(drop=True).to_numpy()
+                temp = df[TSP].dropna()
+                TSPdata = temp.reset_index(drop=True).to_numpy()
+                temp = df[WSP].dropna()
+                WSPdata = temp.reset_index(drop=True).to_numpy()
+                
+                startCure = [] 
+                endCure = []
+                PVelemlist = []
+                TSPelemlist = []
+                WSPelemlist = []
+                rowindx = 0
+                firstHit = False
+                startIndx = 0
+                endIndx = 0
+                passed = False
+                allSet = 0
+                for _ in PVdata:
+                    try:
+                        if PVdata[rowindx]:
+                            pass
+                    except:
+                        break
+                    if (PVdata[rowindx] > plateuTemp) and not firstHit:
+                        firstHit = True
+                    if firstHit:
+                        for i in range(rowindx,0,-1):
+                            if (PVdata[i] < startTemp):
+                                startIndx = i
+                                allSet += 1
+                                break
+                        for i in range(rowindx,len(PVdata)):
+                            if (PVdata[i] < endTemp):
+                                endIndx = i
+                                allSet += 1
+                                break
+                        PVelems = []
+                        TSPelems = []
+                        WSPelems = []
+                        for a in range(startIndx,endIndx):
+                            PVelems.append(PVdata[a])
+                            TSPelems.append(TSPdata[a])
+                            WSPelems.append(WSPdata[a])
+                        if (abs(endIndx - startIndx) < maxRange) and (allSet == 2):
+                            PVelemlist.append(PVelems)
+                            TSPelemlist.append(TSPelems)
+                            WSPelemlist.append(WSPelems)    
+                            startCure.append(startIndx)
+                            endCure.append(endIndx)
+                        rowindx = endIndx + bigLeap
+                        startIndx = 0
+                        endIndx = 0
+                        passed = False
+                        firstHit = False
+                    else:
+                        rowindx += 1
+                discard = []
+                for j,p in enumerate(PVelemlist):
+                    areaWSP = np.trapz(WSPelemlist[j])
+                    areaTSP = np.trapz(TSPelemlist[j])
+                    areaPV = np.trapz(PVelemlist[j])
+                    if areaPV < areaWSP or areaPV < areaTSP:
+                        discard.append(j)
+                discard.sort(reverse=True)
+                for a in discard:
+                    startCure.pop(a)    
+                    endCure.pop(a)  
+            
+                for cycle in range(len(startCure)):    
+                    data = pd.Series(PVdata[startCure[cycle]:endCure[cycle]])
+                    smoothed_data = SuperSmoother().fit(np.linspace(0,1,len(data)),data).predict(np.linspace(0,1,len(data)))
+                    smoothed_data = [x for x in smoothed_data if x != '' and not np.isnan(x) and x != 0]
+
+                    if len(smoothed_data) > 0:
+                        pvCycles.append(smoothed_data)
+                        tspCycles.append(TSPdata[startCure[cycle]:endCure[cycle]])
+                        wspCycles.append(WSPdata[startCure[cycle]:endCure[cycle]]) 
+
+                print(date + len(startCure)*' X')
+                startCure = []
+                endCure = []    
+                PVelemlist = []
+                df = None 
+            except:
+                continue 
+    discard = []
+    for cycle in pvCycles:
+        pvMax.append(np.argmax(cycle))
+    pvMaxMean = np.mean(pvMax)
+    for a in range(len(pvCycles)):
+        if  abs(pvMax[a] - pvMaxMean) > discardThresh:
+            discard.append(a)
+    discard.sort(reverse=True)
+    for a in discard:
+            pvCycles.pop(a)
+
+    y = np.concatenate(pvCycles)
+    y = pd.Series(y)
+    y = np.array(y)
+    Nt = len(y)
+    tf = Nt
     t = np.linspace(0., tf, Nt)
-    y = np.sin(2. * t) + 0.5 * np.cos(t) + np.random.normal(0., 0.2, Nt)
 
     return t, y
 
@@ -87,6 +221,7 @@ def windowed_dataset(y, input_window = 5, output_window = 1, stride = 1, num_fea
 
 
 def numpy_to_torch(Xtrain, Ytrain, Xtest, Ytest):
+
     '''
     convert numpy array to PyTorch tensor
     

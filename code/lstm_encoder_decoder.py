@@ -5,10 +5,12 @@ import random
 import os, errno
 import sys
 from tqdm import trange
+
 import torch
 import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
+
 
 class lstm_encoder(nn.Module):
     ''' Encodes time-series sequence '''
@@ -55,6 +57,7 @@ class lstm_encoder(nn.Module):
         return (torch.zeros(self.num_layers, batch_size, self.hidden_size),
                 torch.zeros(self.num_layers, batch_size, self.hidden_size))
 
+
 class lstm_decoder(nn.Module):
     ''' Decodes hidden state output by encoder '''
     
@@ -82,7 +85,7 @@ class lstm_decoder(nn.Module):
         : param x_input:                    should be 2D (batch_size, input_size)
         : param encoder_hidden_states:      hidden states
         : return output, hidden:            output gives all the hidden states in the sequence;
-        :              e                     hidden gives the hidden state and cell state for the last
+        :                                   hidden gives the hidden state and cell state for the last
         :                                   element in the sequence 
  
         '''
@@ -133,7 +136,6 @@ class lstm_seq2seq(nn.Module):
         :                                  reduces the amount of teacher forcing for each epoch
         : return losses:                   array of loss function for each epoch
         '''
-  
         
         # initialize array of losses 
         losses = np.full(n_epochs, np.nan)
@@ -161,6 +163,7 @@ class lstm_seq2seq(nn.Module):
                     # outputs tensor
                     outputs = torch.zeros(target_len, batch_size, input_batch.shape[2])
 
+
                     # initialize hidden state
                     encoder_hidden = self.encoder.init_hidden(batch_size)
 
@@ -172,7 +175,7 @@ class lstm_seq2seq(nn.Module):
 
                     # decoder with teacher forcing
                     decoder_input = input_batch[-1, :, :]   # shape: (batch_size, input_size)
-                    decoder_hidden = encoder_hidden
+                    decoder_hidden = encoder_hidden 
 
                     if training_prediction == 'recursive':
                         # predict recursively
@@ -214,7 +217,7 @@ class lstm_seq2seq(nn.Module):
                     loss = criterion(outputs, target_batch)
                     batch_loss += loss.item()
                     
-                    # backpropagation   
+                    # backpropagation
                     loss.backward()
                     optimizer.step()
 
@@ -228,11 +231,11 @@ class lstm_seq2seq(nn.Module):
 
                 # progress bar 
                 tr.set_postfix(loss="{0:.3f}".format(batch_loss))
-                    
+
         return losses
 
     def predict(self, input_tensor, target_len):
-        
+
         '''
         : param input_tensor:      input data (seq_len, input_size); PyTorch tensor 
         : param target_len:        number of target values to predict 
