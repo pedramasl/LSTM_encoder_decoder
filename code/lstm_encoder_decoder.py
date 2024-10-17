@@ -82,7 +82,7 @@ class lstm_decoder(nn.Module):
         : param x_input:                    should be 2D (batch_size, input_size)
         : param encoder_hidden_states:      hidden states
         : return output, hidden:            output gives all the hidden states in the sequence;
-        :                                   hidden gives the hidden state and cell state for the last
+        :              e                     hidden gives the hidden state and cell state for the last
         :                                   element in the sequence 
  
         '''
@@ -133,6 +133,7 @@ class lstm_seq2seq(nn.Module):
         :                                  reduces the amount of teacher forcing for each epoch
         : return losses:                   array of loss function for each epoch
         '''
+  
         
         # initialize array of losses 
         losses = np.full(n_epochs, np.nan)
@@ -213,7 +214,7 @@ class lstm_seq2seq(nn.Module):
                     loss = criterion(outputs, target_batch)
                     batch_loss += loss.item()
                     
-                    # backpropagation
+                    # backpropagation   
                     loss.backward()
                     optimizer.step()
 
