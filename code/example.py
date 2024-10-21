@@ -70,7 +70,6 @@ plt.legend(bbox_to_anchor=(1.3, 1))
 plt.tight_layout() 
 plt.savefig('code/plots/windowed_data.png')
 
-
 # convert windowed data from np.array to PyTorch tensor
 X_train, Y_train, X_test, Y_test = generate_dataset.numpy_to_torch(Xtrain, Ytrain, Xtest, Ytest)
 
