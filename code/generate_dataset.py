@@ -22,7 +22,7 @@ discardThresh = 100
 
 def synthetic_data(Nt = 2000, tf = 80 * np.pi):
 
-    folder_path =  "c:/Users/admin/Desktop/old/cure-thingy/WT20-PS/MM4"
+    folder_path =  "C:/Users/pedra/cure-thingy/WT-20/MM4"
     csv_files = glob.glob(folder_path + '/*'+shell+'*.csv')
     os.makedirs(folder_path + '/results', exist_ok=True)
     # for ID in range(1, 129):

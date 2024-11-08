@@ -39,7 +39,7 @@ def plot_train_test_results(lstm_model, Xtrain, Ytrain, Xtest, Ytest, num_rows =
                      color = (0.2, 0.42, 0.72), linewidth = 2, label = 'Target')
       ax[ii, 0].plot(np.arange(iw - 1, iw + ow),  np.concatenate([[Xtrain[-1, ii, 0]], Y_train_pred[:, 0]]),
                      color = (0.76, 0.01, 0.01), linewidth = 2, label = 'Prediction')
-      ax[ii, 0].set_xlim([0, iw + ow - 1])
+      # ax[ii, 0].set_xlim([0, iw + ow - 1])
       ax[ii, 0].set_xlabel('$t$')
       ax[ii, 0].set_ylabel('$y$')
 
@@ -51,7 +51,7 @@ def plot_train_test_results(lstm_model, Xtrain, Ytrain, Xtest, Ytest, num_rows =
                      color = (0.2, 0.42, 0.72), linewidth = 2, label = 'Target')
       ax[ii, 1].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtest[-1, ii, 0]], Y_test_pred[:, 0]]),
                      color = (0.76, 0.01, 0.01), linewidth = 2, label = 'Prediction')
-      ax[ii, 1].set_xlim([0, iw + ow - 1])
+      # ax[ii, 1].set_xlim([0, iw + ow - 1])
       ax[ii, 1].set_xlabel('$t$')
       ax[ii, 1].set_ylabel('$y$')
 

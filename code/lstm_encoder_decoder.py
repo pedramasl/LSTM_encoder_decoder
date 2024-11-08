@@ -57,7 +57,6 @@ class lstm_encoder(nn.Module):
         return (torch.zeros(self.num_layers, batch_size, self.hidden_size),
                 torch.zeros(self.num_layers, batch_size, self.hidden_size))
 
-
 class lstm_decoder(nn.Module):
     ''' Decodes hidden state output by encoder '''
     
