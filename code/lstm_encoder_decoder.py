@@ -43,7 +43,6 @@ class lstm_encoder(nn.Module):
         '''
         
         lstm_out, self.hidden = self.lstm(x_input.view(x_input.shape[0], x_input.shape[1], self.input_size))
-        
         return lstm_out, self.hidden     
     
     def init_hidden(self, batch_size):
@@ -86,7 +85,7 @@ class lstm_decoder(nn.Module):
         : return output, hidden:            output gives all the hidden states in the sequence;
         :                                   hidden gives the hidden state and cell state for the last
         :                                   element in the sequence 
- 
+
         '''
         
         lstm_out, self.hidden = self.lstm(x_input.unsqueeze(0), encoder_hidden_states)
@@ -138,7 +137,6 @@ class lstm_seq2seq(nn.Module):
         
         # initialize array of losses 
         losses = np.full(n_epochs, np.nan)
-
         optimizer = optim.Adam(self.parameters(), lr = learning_rate)
         criterion = nn.MSELoss()
 

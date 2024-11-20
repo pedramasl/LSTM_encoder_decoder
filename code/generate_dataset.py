@@ -7,7 +7,7 @@ import glob
 import os
 import warnings
 from supersmoother import SuperSmoother
-
+from torch.utils.data import random_split
 warnings.simplefilter("ignore")
 shell = 'SS'
 ID = 40
@@ -20,7 +20,7 @@ bigLeap = 300 # skip to get out of current cycle toward next cycle
 maxTemp = 200
 discardThresh = 100
 
-def synthetic_data(Nt = 2000, tf = 80 * np.pi):
+def synthetic_data():
 
     folder_path =  "C:/Users/pedra/cure-thingy/WT-20/MM4"
     csv_files = glob.glob(folder_path + '/*'+shell+'*.csv')
@@ -149,42 +149,55 @@ def synthetic_data(Nt = 2000, tf = 80 * np.pi):
     for a in discard:
             pvCycles.pop(a)
 
-    y = np.concatenate(pvCycles)
-    y = pd.Series(y)
-    y = np.array(y)
-    Nt = len(y)
-    tf = Nt
-    t = np.linspace(0., tf, Nt)
 
-    return t, y
 
-def train_test_split(t, y, split = 0.8):
+    return pvCycles
 
-  '''
-  
-  split time series into train/test sets
-  
-  : param t:                      time array
-  : para y:                       feature array
-  : para split:                   percent of data to include in training set 
-  : return t_train, y_train:      time/feature training and test sets;  
-  :        t_test, y_test:        (shape: [# samples, 1])
-  
-  '''
-  
-  indx_split = int(split * len(y))
-  indx_train = np.arange(0, indx_split)
-  indx_test = np.arange(indx_split, len(y))
-  
-  t_train = t[indx_train]
-  y_train = y[indx_train]
-  y_train = y_train.reshape(-1, 1)
-  
-  t_test = t[indx_test]
-  y_test = y[indx_test]
-  y_test = y_test.reshape(-1, 1)
-  
-  return t_train, y_train, t_test, y_test 
+def train_test_split(pvCycles, split = 0.8):
+
+    '''
+
+    split time series into train/test sets
+
+    : param t:                      time array
+    : para y:                       feature array
+    : para split:                   percent of data to include in training set 
+    : return t_train, y_train:      time/feature training and test sets;  
+    :        t_test, y_test:        (shape: [# samples, 1])
+
+    '''
+    total_cycles = len(pvCycles)
+    train_size = int(split * total_cycles)
+    test_size = total_cycles - train_size
+    train_cycles, test_cycles = random_split(pvCycles, [train_size, test_size])
+ 
+    
+    return train_cycles, test_cycles
+
+def create_sequences(cycles, seq_length, pred_length, last_only = True):
+        Seq = []
+        overlap = 0.95
+        offset = int(seq_length * (1 - overlap))
+        if offset == 0: 
+            offset = 1  
+        L = len(cycles[0]) 
+        num_samples = (L - seq_length - pred_length) // offset + 1
+        X = np.zeros([seq_length, num_samples, 1])
+        Y = np.zeros([pred_length, num_samples, 1])    
+        for cycle in cycles:
+            for i in range(0,len(cycle) - seq_length - pred_length,offset):
+                read_seq = cycle[i:i + seq_length]
+                if last_only:
+                    pred_seq = cycle[i + seq_length + pred_length]
+                else:
+                    pred_seq = cycle[i + seq_length:i + seq_length + pred_length]
+                Seq.append((read_seq, pred_seq))
+        inp, out  = np.array([seq[0] for seq in Seq]), np.array([seq[1] for seq in Seq])
+        for ii in range(num_samples):
+            X[:, ii, 0] = inp[ii]
+            Y[:, ii, 0] = out[ii]
+        return X, Y
+
 
 
 def windowed_dataset(y, input_window = 5, output_window = 1, stride = 1, num_features = 1):
